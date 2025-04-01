@@ -2,6 +2,8 @@ package media
 
 import (
 	"context"
+	"fmt"
+	"os/exec"
 
 	"github.com/fsnotify/fsnotify"
 	log "go.uber.org/zap"
@@ -19,6 +21,14 @@ func (m *Media) ProcessFileAsMedia(ctx context.Context, path string) (*File, err
 	// modificationTime := fileInfo.ModTime()
 	metaData, err := getMetaData(ctx, path)
 	if err == nil {
+		if metaData.DurationSeconds < .1 {
+			cmd := exec.CommandContext(ctx, "feh", "-l", path)
+			if err := cmd.Run(); err != nil {
+				if exitError, ok := err.(*exec.ExitError); ok {
+					return nil, fmt.Errorf("failed to add %s returned with exit code: %d", path, exitError.ExitCode())
+				}
+			}
+		}
 		log.S().Debugf("%s, %+v", path, metaData)
 		return &File{Path: path, MetaData: *metaData}, err
 	}

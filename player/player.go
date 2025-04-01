@@ -1,13 +1,12 @@
 package player
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
-	"time"
 
 	"github.com/dexterlb/mpvipc"
 	log "go.uber.org/zap"
@@ -69,11 +68,14 @@ func (p *Player) PlayVideo(path string) error {
 
 func (p *Player) PlayImage(path string, slideDuration float64) error {
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(slideDuration)+(time.Millisecond*500))
-		defer cancel()
-		cmd := exec.CommandContext(ctx, "feh", "-Z", "-Y", "-F", path)
+		cmd := exec.Command("feh", "--on-last-slide", "quit", "-D", strconv.FormatFloat(slideDuration+.5, 'f', -1, 64), "-Z", "-Y", "-F", path)
 		cmd.Env = append(os.Environ(), "DISPLAY=:0")
-		cmd.Run()
+		if err := cmd.Run(); err != nil {
+			log.S().Error(err)
+			if exitError, ok := err.(*exec.ExitError); ok {
+				log.S().Errorf("%s returned with exit code: %d", path, exitError.ExitCode())
+			}
+		}
 	}()
 	if p.Conn.IsClosed() {
 		if err := p.Conn.Open(); err != nil {

@@ -22,7 +22,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-const AppVersion = "0.0.4"
+const AppVersion = "0.0.5"
 
 type app struct {
 	mediaFileHandler *media.Media
