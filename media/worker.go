@@ -2,16 +2,18 @@ package media
 
 import (
 	"context"
-	"fmt"
+	"memoryShare/feh"
+	"os"
 	"os/exec"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	log "go.uber.org/zap"
 )
 
 func (m *Media) ProcessFileAsMedia(ctx context.Context, path string) (*File, error) {
-	m.Lock()
-	defer m.Unlock()
+	m.processMu.Lock()
+	defer m.processMu.Unlock()
 	// Get the fileinfo
 	//fileInfo, err := os.Stat(path)
 	//if err != nil {
@@ -21,18 +23,30 @@ func (m *Media) ProcessFileAsMedia(ctx context.Context, path string) (*File, err
 	// modificationTime := fileInfo.ModTime()
 	metaData, err := getMetaData(ctx, path)
 	if err == nil {
-		if metaData.DurationSeconds < .1 {
-			cmd := exec.CommandContext(ctx, "feh", "-l", path)
-			if err := cmd.Run(); err != nil {
-				if exitError, ok := err.(*exec.ExitError); ok {
-					return nil, fmt.Errorf("failed to add %s returned with exit code: %d", path, exitError.ExitCode())
-				}
+		if IsImage(metaData.DurationSeconds) {
+			if err := validateImage(ctx, path); err != nil {
+				return nil, err
 			}
 		}
 		log.S().Debugf("%s, %+v", path, metaData)
 		return &File{Path: path, MetaData: *metaData}, err
 	}
 	return nil, err
+}
+
+// validateImage confirms feh (the image viewer the player package uses for
+// playback) can actually load path, catching corrupt or unsupported image
+// files before they're added to rotation. It's bounded by its own timeout,
+// mirroring getMetaData's, so a hung feh can't block callers indefinitely.
+func validateImage(ctx context.Context, path string) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "feh", "-l", path)
+	cmd.Env = append(os.Environ(), "DISPLAY=:0")
+	if err := cmd.Run(); err != nil {
+		return feh.RunError(path, err)
+	}
+	return nil
 }
 
 func (m *Media) QueueFile(path string) {

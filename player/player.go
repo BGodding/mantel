@@ -1,12 +1,15 @@
 package player
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
+	"memoryShare/feh"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/dexterlb/mpvipc"
 	log "go.uber.org/zap"
@@ -68,13 +71,15 @@ func (p *Player) PlayVideo(path string) error {
 
 func (p *Player) PlayImage(path string, slideDuration float64) error {
 	go func() {
-		cmd := exec.Command("feh", "--on-last-slide", "quit", "-D", strconv.FormatFloat(slideDuration+.5, 'f', -1, 64), "-Z", "-Y", "-F", path)
+		// feh is expected to quit on its own via --on-last-slide once its own
+		// -D delay elapses; this context is only a backstop in case it
+		// doesn't, so it's given headroom beyond feh's own delay.
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(slideDuration)+(time.Second*5))
+		defer cancel()
+		cmd := exec.CommandContext(ctx, "feh", "--on-last-slide", "quit", "-D", strconv.FormatFloat(slideDuration+.5, 'f', -1, 64), "-Z", "-Y", "-F", path)
 		cmd.Env = append(os.Environ(), "DISPLAY=:0")
 		if err := cmd.Run(); err != nil {
-			log.S().Error(err)
-			if exitError, ok := err.(*exec.ExitError); ok {
-				log.S().Errorf("%s returned with exit code: %d", path, exitError.ExitCode())
-			}
+			log.S().Error(feh.RunError(path, err))
 		}
 	}()
 	if p.Conn.IsClosed() {
