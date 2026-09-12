@@ -3,8 +3,8 @@ package media
 import (
 	"context"
 	"io/fs"
+	"mantel/watcher"
 	"math/rand"
-	"memoryShare/watcher"
 	"path/filepath"
 	"slices"
 	"strings"

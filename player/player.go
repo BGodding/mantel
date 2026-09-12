@@ -3,8 +3,8 @@ package player
 import (
 	"context"
 	"fmt"
+	"mantel/feh"
 	"math/rand"
-	"memoryShare/feh"
 	"os"
 	"os/exec"
 	"strconv"

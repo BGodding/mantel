@@ -5,7 +5,11 @@ After=graphical.target
 [Service]
 Type=exec
 User=msuser
-ExecStart=/bin/sh -c "DISPLAY=:0 mpv --fs --image-display-duration=inf --idle=once --keep-open=yes --ao=null --input-ipc-server=/tmp/mpv_socket"
+# Restrict the mpv IPC socket (/tmp/mpv_socket) to msuser only; it accepts
+# unauthenticated playback-control commands from anything that can connect.
+UMask=0077
+Environment=DISPLAY=:0
+ExecStart=mpv --fs --image-display-duration=inf --idle=once --keep-open=yes --ao=null --input-ipc-server=/tmp/mpv_socket
 Restart=always
 RestartSec=5
 SyslogIdentifier=media-player

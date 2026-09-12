@@ -89,8 +89,8 @@ fi
 # wlr-randr --output HDMI-A-1 --transform 180
 # -> add 'display_rotate=2'
 
-chmod +x memoryShare
-sudo mv memoryShare /usr/local/bin
+chmod +x mantel
+sudo mv mantel /usr/local/bin
 
 # Install and enable services
 sed -i "s|@@MEDIA_FOLDERS@@|${MEDIA_DIRECTORY}|" media-controller.service

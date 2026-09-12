@@ -2,7 +2,7 @@ package media
 
 import (
 	"context"
-	"memoryShare/feh"
+	"mantel/feh"
 	"os"
 	"os/exec"
 	"time"

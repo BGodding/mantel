@@ -1,4 +1,4 @@
-module memoryShare
+module mantel
 
 go 1.25.0
 
