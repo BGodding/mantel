@@ -92,6 +92,19 @@ fi
 chmod +x mantel
 sudo mv mantel /usr/local/bin
 
+# Install a custom-built mpv (see setup/mpv-custom/README.md) — the Bookworm-
+# packaged mpv 0.35.1 hangs the whole Pi 5 when a hardware HEVC decode
+# session is torn down; this build (v0.36.0) fixes that.
+sudo cp mpv-0.36.0-rpi5-bookworm-arm64 /usr/local/bin/mpv-0.36.0-custom
+sudo chmod 755 /usr/local/bin/mpv-0.36.0-custom
+mkdir -p ~/.config/mpv
+touch ~/.config/mpv/mpv.conf
+if grep -q "^hwdec=" ~/.config/mpv/mpv.conf; then
+  sed -i "s/^hwdec=.*/hwdec=drm-copy/" ~/.config/mpv/mpv.conf
+else
+  echo "hwdec=drm-copy" >> ~/.config/mpv/mpv.conf
+fi
+
 # Install and enable services
 sed -i "s|@@MEDIA_FOLDERS@@|${MEDIA_DIRECTORY}|" media-controller.service
 sudo mv media-controller.service /etc/systemd/system/

@@ -29,7 +29,7 @@ go build -ldflags "-w"
 
 ## Scp files
 ```shell
-scp mantel setup\rpi-setup.sh services\media-controller.service services\media-player.service msuser@<hostname or ip>:~
+scp mantel setup\rpi-setup.sh setup\mpv-custom\mpv-0.36.0-rpi5-bookworm-arm64 services\media-controller.service services\media-player.service msuser@<hostname or ip>:~
 dos2unix rpi-setup.sh
 chmod +x rpi-setup.sh
 sudo -v ; ./rpi-setup.sh

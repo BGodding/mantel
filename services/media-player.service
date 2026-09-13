@@ -9,7 +9,10 @@ User=msuser
 # unauthenticated playback-control commands from anything that can connect.
 UMask=0077
 Environment=DISPLAY=:0
-ExecStart=mpv --fs --image-display-duration=inf --idle=once --keep-open=yes --ao=null --input-ipc-server=/tmp/mpv_socket
+# /usr/local/bin/mpv-0.36.0-custom is a custom build (see setup/mpv-custom/README.md) —
+# the Bookworm-packaged mpv 0.35.1 hangs the whole Pi 5 when a hardware HEVC
+# decode session is torn down.
+ExecStart=/usr/local/bin/mpv-0.36.0-custom --fs --image-display-duration=inf --idle=once --keep-open=yes --ao=null --input-ipc-server=/tmp/mpv_socket
 Restart=always
 RestartSec=5
 SyslogIdentifier=media-player
