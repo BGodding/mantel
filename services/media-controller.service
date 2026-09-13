@@ -1,12 +1,12 @@
 [Unit]
 Description=Curates files for the media player service
-# After=media-player.service
+After=media-player.service
 After=graphical.target
 
 [Service]
 Type=exec
 User=msuser
-ExecStart=memoryShare --media-folders @@MEDIA_FOLDERS@@
+ExecStart=mantel --media-folders @@MEDIA_FOLDERS@@
 Restart=on-failure
 RestartSec=5
 

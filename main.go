@@ -5,9 +5,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"mantel/media"
+	"mantel/player"
 	"math"
-	"memoryShare/media"
-	"memoryShare/player"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -22,7 +22,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-const AppVersion = "0.0.4"
+const AppVersion = "1.0.0"
 
 type app struct {
 	mediaFileHandler *media.Media
@@ -96,7 +96,10 @@ func main() {
 
 	var splashFile *media.File
 	if *splashScreenPath != "" {
-		splashFile, _ = a.mediaFileHandler.ProcessFileAsMedia(ctx, *splashScreenPath)
+		splashFile, err = a.mediaFileHandler.ProcessFileAsMedia(ctx, *splashScreenPath)
+		if err != nil {
+			log.S().Errorf("failed to load splash screen %q: %s", *splashScreenPath, err)
+		}
 	}
 
 	// Load some initial content right away
@@ -143,7 +146,7 @@ func (a *app) UpdateDisplay(splashMedia *media.File) (time.Duration, error) {
 
 	if file.Path != "" {
 		log.S().Infof("playing media path %#q duration %fs", file.Path, file.MetaData.DurationSeconds)
-		if file.MetaData.DurationSeconds < .1 {
+		if media.IsImage(file.MetaData.DurationSeconds) {
 			if err := a.mediaPlayer.PlayImage(file.Path, a.slideDuration); err != nil {
 				log.S().Error(err)
 				return time.Millisecond * 100, err

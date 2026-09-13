@@ -3,8 +3,8 @@ package media
 import (
 	"context"
 	"io/fs"
+	"mantel/watcher"
 	"math/rand"
-	"memoryShare/watcher"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -21,6 +21,16 @@ type File struct {
 	MetaData ffprobe.Format
 }
 
+// imageDurationThreshold is the ffprobe duration (in seconds) below which a
+// file is treated as a still image rather than a video.
+const imageDurationThreshold = .1
+
+// IsImage reports whether d (a file's ffprobe duration in seconds) indicates
+// the file is a still image rather than a video.
+func IsImage(d float64) bool {
+	return d < imageDurationThreshold
+}
+
 type Media struct {
 	sync.RWMutex
 	foldersPending []string
@@ -35,6 +45,10 @@ type Media struct {
 	watch            *watcher.Watcher
 	watchEvents      chan fsnotify.Event
 	playStartTime    time.Time
+	// processMu serializes calls to ProcessFileAsMedia (which shells out to
+	// ffprobe/feh) without holding the RWMutex above, so a slow or hung
+	// subprocess doesn't block GetRandomFile/RemoveFile on the display loop.
+	processMu sync.Mutex
 }
 
 func Init(ctx context.Context, paths []string) (*Media, error) {

@@ -1,4 +1,4 @@
-# MemoryShare
+# Mantel
 This repo is an attempt to create an open source media viewer focused on sharing media with friends and family.
 
 The guide and scripts will be heavily focused on using a Raspberry Pi, but the core services should run fine on most OS's.
@@ -29,7 +29,7 @@ go build -ldflags "-w"
 
 ## Scp files
 ```shell
-scp memoryShare setup\rpi-setup.sh services\media-controller.service services\media-player.service msuser@<hostname or ip>:~
+scp mantel setup\rpi-setup.sh setup\mpv-custom\mpv-0.36.0-rpi5-bookworm-arm64 services\media-controller.service services\media-player.service msuser@<hostname or ip>:~
 dos2unix rpi-setup.sh
 chmod +x rpi-setup.sh
 sudo -v ; ./rpi-setup.sh

@@ -1,16 +1,16 @@
-module memoryShare
+module mantel
 
-go 1.23.2
+go 1.26.0
 
 require (
-	github.com/dexterlb/mpvipc v0.0.0-20241005113212-7cdefca0e933
-	github.com/fsnotify/fsnotify v1.8.0
-	go.uber.org/zap v1.27.0
-	gopkg.in/vansante/go-ffprobe.v2 v2.2.1
+	github.com/dexterlb/mpvipc v0.0.0-20260722094525-0cf47d745b36
+	github.com/fsnotify/fsnotify v1.10.1
+	go.uber.org/zap v1.28.0
+	gopkg.in/vansante/go-ffprobe.v2 v2.3.0
 )
 
 require (
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 )
