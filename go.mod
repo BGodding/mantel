@@ -1,6 +1,6 @@
 module mantel
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/dexterlb/mpvipc v0.0.0-20260722094525-0cf47d745b36
@@ -11,6 +11,6 @@ require (
 
 require (
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 )
