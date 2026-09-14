@@ -11,11 +11,10 @@ set -a; source .env; set +a
 
 mediaDirectory="${MEDIA_DIRECTORY:-$HOME\mediasync}"
 hostname="${HOSTNAME:-$(hostname -s)}"
-mediaAlbumName="${MEDIA_ALBUM_NAME:-HomePictureFrame}"
 
 echo "Running setup with the media directory set to $mediaDirectory and a hostname of $hostname"
 
-if [ ! -f "$mediaDirectory" ]; then
+if [ ! -d "$mediaDirectory" ]; then
   mkdir -p "$mediaDirectory" || { echo "Failed to make missing media directory $mediaDirectory" ; exit 1; }
 fi
 
@@ -50,13 +49,33 @@ EOF
   sudo mv screenoff.sh /usr/local/bin/screenoff.sh
 fi
 
+# Install rclone itself if missing, then non-interactively configure the
+# 'mediasync' remote from this frame's own dedicated, read-only WebDAV
+# account (WEBDAV_URL already points directly at this frame's folder —
+# see setup/.env.template). Uses `sync`, not `copy`: a photo deleted from
+# Nextcloud is deleted from this frame's local copy on the next run —
+# that's deliberate, not a bug (smart_frame_sh's FrameProvisioning_Runbook
+# §1b).
+if ! command -v rclone >/dev/null 2>&1; then
+  echo "Installing rclone"
+  sudo -v
+  curl https://rclone.org/install.sh | sudo bash
+fi
+
+if [ -n "$WEBDAV_URL" ] && [ -n "$WEBDAV_USER" ] && [ -n "$WEBDAV_PASSWORD" ]; then
+  echo "Configuring rclone remote 'mediasync' from WEBDAV_* in .env"
+  obscuredPass=$(rclone obscure "$WEBDAV_PASSWORD")
+  rclone config create mediasync webdav url="$WEBDAV_URL" vendor=nextcloud user="$WEBDAV_USER" pass="$obscuredPass"
+else
+  echo "WARNING: WEBDAV_URL/WEBDAV_USER/WEBDAV_PASSWORD not set in .env — the 'mediasync' rclone remote was NOT configured. media-sync.sh will fail until you run: rclone config create mediasync webdav url=<url> vendor=nextcloud user=<user> pass=\$(rclone obscure <password>)"
+fi
+
 if [ ! -f /usr/local/bin/media-sync.sh ]; then
   echo "Installing media sync helper script"
   cat << EOF >> media-sync.sh
 #!/bin/bash
 # --rc should prevent overlapping cron jobs as the previous process will be occupying the port
-rclone sync --rc mediasync:album/$mediaAlbumName $mediaDirectory
-# rclone sync mediasync:media/by-year $mediaDirectory
+rclone sync --rc mediasync: $mediaDirectory
 EOF
   chmod +x media-sync.sh
   sudo mv media-sync.sh /usr/local/bin/media-sync.sh
@@ -82,7 +101,7 @@ sudo raspi-config nonint do_boot_splash 0
 sudo raspi-config nonint do_blanking 0
 
 # Setup WIFI if provided
-if [ -z "$WIRELESS_SSID" ]; then
+if [ -n "$WIRELESS_SSID" ]; then
   sudo raspi-config nonint do_wifi_ssid_passphrase "$WIRELESS_SSID" "$WIRELESS_PASSPHRASE"
 fi
 
@@ -118,10 +137,8 @@ sudo systemctl enable media-controller.service
 
 sudo systemctl start media-player.service
 sudo systemctl start media-controller.service
-echo Install and setup rclone with 'sudo -v ; curl https://rclone.org/install.sh | sudo bash'
-echo Note that the remote must be named 'mediasync' when configuring rclone and the target album in google photos must be named 'HomePictureFrame'.
-echo This can be customized by changing the contents of '/usr/local/bin/media-sync.sh'
-echo Then run 'sudo systemctl start media-sync.service'
+echo "rclone and the 'mediasync' remote were configured automatically from WEBDAV_* in .env (see above for any warning about that)."
+echo "Sync runs every 5 minutes via cron; to change what it does, edit /usr/local/bin/media-sync.sh."
 
 # Disable image wallpaper in favor of a solid color
 DISPLAY=:0 pcmanfm --wallpaper-mode=color
